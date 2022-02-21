@@ -26,6 +26,7 @@ namespace PointsGeneratorFinder
        
         async void drawPoints(int x, int y)
         {
+            #region generate points
             area.Height = y * 30;
             area.Width = x * 30 ;
             Random random = new Random();
@@ -37,18 +38,22 @@ namespace PointsGeneratorFinder
                 }
 
             }
-
+            #endregion
             foreach (var item in points)
             {
                 Console.WriteLine(item);
                 SolidColorBrush brush = new SolidColorBrush();
                 brush.Color = Colors.Blue;
+
+                //Ellipse dot in xy field area
                 Ellipse ellipse = new Ellipse() { Height = 4, Width = 4 };
                 ellipse.Fill = brush;
                 ellipse.StrokeThickness = 2;
                 ellipse.Stroke = Brushes.Black;
                 ellipse.Margin = new Thickness(item.X - 2, item.Y - 2, 0, 0);
                 ellipse.Tag = item;
+
+                //Label to see points X,Y value
                 Label label = new Label();
                 label.Content = "X" + item.X + " Y" + item.Y;
                 label.Margin = new Thickness(item.X - 10, item.Y - 15, 0, 0);
@@ -69,8 +74,8 @@ namespace PointsGeneratorFinder
             points.Clear();
             drawPoints(x, y);
         }
-
-        private async void Find_Click(object sender, RoutedEventArgs e)
+        //Sorting by X
+        private void Find_Click(object sender, RoutedEventArgs e)
         {
             //X
             List<Ellipse> ellipses = new List<Ellipse>();
@@ -101,20 +106,20 @@ namespace PointsGeneratorFinder
 
             }
         }
-
+        //Sorting by Y
         private void FindY_Click(object sender, RoutedEventArgs e)
         {
-            List<Ellipse> ellipses = new List<Ellipse>();
-            points = points.OrderBy(p => p.Y).ToList();
+            List<Ellipse> ellipses = new List<Ellipse>(); //list for ellipses
+            points = points.OrderBy(p => p.Y).ToList(); //sort points to match later sort of ellipse
             DataPoints.ItemsSource = points;
-            foreach (var item in area.Children)
+            foreach (var item in area.Children) //take out ellipses from canva
             {
                 if (item is Ellipse)
                 {
                     ellipses.Add(item as Ellipse);
                 }
             }
-            ellipses = ellipses.OrderBy(p => ((Point)p.Tag).Y).ToList();
+            ellipses = ellipses.OrderBy(p => ((Point)p.Tag).Y).ToList(); //sort ellipses by points
             for (int i = 0; i < ellipses.Count; i++)
             {
 
