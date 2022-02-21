@@ -147,12 +147,13 @@ namespace PointsGeneratorFinder
             }
             //SORT by Y means columns, X is rows
             List<Ellipse> ellipses = new List<Ellipse>(); //list for ellipses
-            if (amount_cols >= amount_rows) { 
-            points = points.OrderBy(p => p.Y).ToList(); //sort points to match later sort of ellipse
+            if (amount_cols >= amount_rows)
+            {
+                points = points.OrderBy(p => p.Y).ToList(); //sort points to match later sort of ellipse
             }
             else
             {
-            points = points.OrderBy(p => p.X).ToList(); //sort points to match later sort of ellipse
+                points = points.OrderBy(p => p.X).ToList(); //sort points to match later sort of ellipse
             }
             DataPoints.ItemsSource = points;
             foreach (var item in area.Children) //take out ellipses from canva
@@ -162,7 +163,7 @@ namespace PointsGeneratorFinder
                     ellipses.Add(item as Ellipse);
                 }
             }
-            if(amount_cols >= amount_rows)
+            if (amount_cols >= amount_rows)
             {
                 ellipses = ellipses.OrderBy(p => ((Point)p.Tag).Y).ToList(); //sort ellipses by points
                 int f = 0;
@@ -197,9 +198,6 @@ namespace PointsGeneratorFinder
                 }
             }
 
-
-           
-
             Brush brush = Brushes.Red;
             bool change = false;
             int g = 0;
@@ -227,50 +225,59 @@ namespace PointsGeneratorFinder
             }
 
         }
-        private async Task take_out(List<List<Ellipse>> ellipses)
+
+        private async Task take_out(List<List<Ellipse>> ellipses, bool recursive = false)
         {
             int leftovers = 0;
-            foreach (var item in ellipses) //get row or column (bigger one)
+            if (recursive)
             {
-                if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
+                leftovers = ellipses[0].Count % 5;
+            }
+            else
+            {
+                foreach (var item in ellipses) //get row or column (bigger one)
                 {
-                    //TODO: Mode to take odd and even
-                    int p = item.Count / 5;
-                    for (int i = 0; i < p; i++)
+
+                    if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
                     {
-                        List<Ellipse> el = item.GetRange(i * 5, 5);
-                        foreach (var ellipse in el)
+                        //TODO: Mode to take odd and even
+                        int p = item.Count / 5;
+                        for (int i = 0; i < p; i++)
                         {
+                            List<Ellipse> el = item.GetRange(i * 5, 5);
+                            foreach (var ellipse in el)
+                            {
+                                ellipse.Opacity = 0.2;
+                            }
+                            await Task.Delay(500);
+                        }
+                    }
+                    else if (item.Count < 5) //if there is less than 5 we can take all directly
+                    {
+                        foreach (var el in item)
+                        {
+                            Ellipse ellipse = el;
                             ellipse.Opacity = 0.2;
                         }
-                        await Task.Delay(500);
                     }
-                }
-                else if (item.Count < 5) //if there is less than 5 we can take all directly
-                {
-                    foreach (var el in item)
+                    else //there is more than 5, ex. 12,7,9,34
                     {
-                        Ellipse ellipse = el;
-                        ellipse.Opacity = 0.2;
-                    }
-                }
-                else //there is more than 5, ex. 12,7,9,34
-                {
-                    leftovers = item.Count % 5; //rest
-                    int p = item.Count / 5; //full 5
-                    for (int i = 0; i < p; i++)
-                    {
-                        List<Ellipse> el = item.GetRange(i * 5, 5);
-                        foreach (var ellipse in el)
+                        leftovers = item.Count % 5; //rest
+                        int p = item.Count / 5; //full 5
+                        for (int i = 0; i < p; i++)
                         {
-                            ellipse.Opacity = 0.2;
+                            List<Ellipse> el = item.GetRange(i * 5, 5);
+                            foreach (var ellipse in el)
+                            {
+                                ellipse.Opacity = 0.2;
+                            }
+                            await Task.Delay(500);
                         }
-                        await Task.Delay(500);
                     }
+                    await Task.Delay(500);
+
+
                 }
-                await Task.Delay(500);
-
-
             }
             if (leftovers != 0)
             {
@@ -279,7 +286,7 @@ namespace PointsGeneratorFinder
         }
         private async void start_Click(object sender, RoutedEventArgs e)
         {
-           await take_out(all_ellipses);
+            await take_out(all_ellipses);
         }
         async void Leftovers(int amount)
         {
@@ -293,7 +300,12 @@ namespace PointsGeneratorFinder
                 }
                 subellipses.Add(tmp);
             }
-           await take_out(subellipses);
+            subellipses = subellipses.SelectMany(inner => inner.Select((item, index) => new { item, index })) //transpose of matrix
+                                                                .GroupBy(i => i.index, i => i.item)
+                                                                .Select(g => g.ToList())
+                                                                .ToList();
+            await take_out(subellipses);
         }
+
     }
 }
