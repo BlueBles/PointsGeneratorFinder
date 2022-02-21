@@ -14,21 +14,23 @@ namespace PointsGeneratorFinder
     /// </summary>
     public partial class Option_2 : Window
     {
+        List<List<Ellipse>> all_ellipses = new List<List<Ellipse>>();
         List<Point> points = new List<Point>();
         Canvas area;
         const int SUCKERS = 5;
+        int amount_rows = 0;
+        int amount_cols = 0;
         public Option_2()
         {
             InitializeComponent();
             area = canva;
-            drawPoints(7, 10);
         }
-       
+
         async void drawPoints(int x, int y)
         {
             #region generate points
             area.Height = y * 30;
-            area.Width = x * 30 ;
+            area.Width = x * 30;
             Random random = new Random();
             for (int i = 0; i < x; i++)
             {
@@ -70,6 +72,8 @@ namespace PointsGeneratorFinder
         {
             int y = (int)Rows.Value;
             int x = (int)Columns.Value;
+            amount_cols = x;
+            amount_rows = y;
             area.Children.Clear();
             points.Clear();
             drawPoints(x, y);
@@ -103,7 +107,6 @@ namespace PointsGeneratorFinder
                     Ellipse ellipse = ellipses[i];
                     ellipse.Stroke = Brushes.Red;
                 }
-
             }
         }
         //Sorting by Y
@@ -133,8 +136,164 @@ namespace PointsGeneratorFinder
                     Ellipse ellipse = ellipses[i];
                     ellipse.Stroke = Brushes.Red;
                 }
+            }
+        }
+
+        private async void FindS_Click(object sender, RoutedEventArgs e)
+        {
+            if (all_ellipses.Count != 0)
+            {
+                all_ellipses.Clear();
+            }
+            //SORT by Y means columns, X is rows
+            List<Ellipse> ellipses = new List<Ellipse>(); //list for ellipses
+            if (amount_cols >= amount_rows) { 
+            points = points.OrderBy(p => p.Y).ToList(); //sort points to match later sort of ellipse
+            }
+            else
+            {
+            points = points.OrderBy(p => p.X).ToList(); //sort points to match later sort of ellipse
+            }
+            DataPoints.ItemsSource = points;
+            foreach (var item in area.Children) //take out ellipses from canva
+            {
+                if (item is Ellipse)
+                {
+                    ellipses.Add(item as Ellipse);
+                }
+            }
+            if(amount_cols >= amount_rows)
+            {
+                ellipses = ellipses.OrderBy(p => ((Point)p.Tag).Y).ToList(); //sort ellipses by points
+                int f = 0;
+                List<Ellipse> tmp = new List<Ellipse>();
+                foreach (var item in ellipses)
+                {
+                    f++;
+                    tmp.Add(item);
+                    if (f == amount_cols)
+                    {
+                        all_ellipses.Add(tmp);
+                        tmp = new List<Ellipse>();
+                        f = 0;
+                    }
+                }
+            }
+            else
+            {
+                ellipses = ellipses.OrderBy(p => ((Point)p.Tag).X).ToList(); //sort ellipses by points
+                int f = 0;
+                List<Ellipse> tmp = new List<Ellipse>();
+                foreach (var item in ellipses)
+                {
+                    f++;
+                    tmp.Add(item);
+                    if (f == amount_rows)
+                    {
+                        all_ellipses.Add(tmp);
+                        tmp = new List<Ellipse>();
+                        f = 0;
+                    }
+                }
+            }
+
+
+           
+
+            Brush brush = Brushes.Red;
+            bool change = false;
+            int g = 0;
+            //color just to see diffrence
+            foreach (var item in all_ellipses)
+            {
+                foreach (var eli in item)
+                {
+
+                    Ellipse ellipse = eli;
+                    ellipse.Stroke = brush;
+                }
+                if (change)
+                {
+                    brush = Brushes.Red;
+                    change = !change;
+                }
+                else
+                {
+                    brush = Brushes.Green;
+                    change = !change;
+
+                }
+                await Task.Delay(50);
+            }
+
+        }
+        private async Task take_out(List<List<Ellipse>> ellipses)
+        {
+            int leftovers = 0;
+            foreach (var item in ellipses) //get row or column (bigger one)
+            {
+                if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
+                {
+                    //TODO: Mode to take odd and even
+                    int p = item.Count / 5;
+                    for (int i = 0; i < p; i++)
+                    {
+                        List<Ellipse> el = item.GetRange(i * 5, 5);
+                        foreach (var ellipse in el)
+                        {
+                            ellipse.Opacity = 0.2;
+                        }
+                        await Task.Delay(500);
+                    }
+                }
+                else if (item.Count < 5) //if there is less than 5 we can take all directly
+                {
+                    foreach (var el in item)
+                    {
+                        Ellipse ellipse = el;
+                        ellipse.Opacity = 0.2;
+                    }
+                }
+                else //there is more than 5, ex. 12,7,9,34
+                {
+                    leftovers = item.Count % 5; //rest
+                    int p = item.Count / 5; //full 5
+                    for (int i = 0; i < p; i++)
+                    {
+                        List<Ellipse> el = item.GetRange(i * 5, 5);
+                        foreach (var ellipse in el)
+                        {
+                            ellipse.Opacity = 0.2;
+                        }
+                        await Task.Delay(500);
+                    }
+                }
+                await Task.Delay(500);
+
 
             }
+            if (leftovers != 0)
+            {
+                Leftovers(leftovers);
+            }
+        }
+        private async void start_Click(object sender, RoutedEventArgs e)
+        {
+           await take_out(all_ellipses);
+        }
+        async void Leftovers(int amount)
+        {
+            List<List<Ellipse>> subellipses = new List<List<Ellipse>>();
+            foreach (var item in all_ellipses)
+            {
+                List<Ellipse> tmp = new List<Ellipse>();
+                for (int i = item.Count - 1; i >= 0; i--)
+                {
+                    tmp = item.Skip(Math.Max(0, item.Count() - amount)).ToList();
+                }
+                subellipses.Add(tmp);
+            }
+           await take_out(subellipses);
         }
     }
 }

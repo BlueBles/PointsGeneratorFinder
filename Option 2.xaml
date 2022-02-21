@@ -14,7 +14,8 @@
         </Grid.RowDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
@@ -41,6 +42,8 @@
             </Grid>
             <Button x:Name="Find" Grid.Column="1"  Content="Find best Rows" Click="Find_Click" />
             <Button x:Name="FindY" Grid.Column="2"  Content="Find best Columns" Click="FindY_Click" />
+            <Button x:Name="FindS" Grid.Column="3"  Content="Find Test" Click="FindS_Click" />
+
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -58,8 +61,8 @@
                     <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
                 <hc:SimpleStackPanel >
-                    <Label Margin="2" x:Name="red" Style="{DynamicResource LabelDanger}" HorizontalAlignment="Stretch" Content=""/>
-                    <Label Margin="2" x:Name="green"  Style="{DynamicResource LabelSuccess}" HorizontalAlignment="Stretch" Content=""/>
+                    <Button Margin="2" x:Name="start" Style="{DynamicResource ButtonSuccess}" HorizontalAlignment="Stretch" Content="Start" Click="start_Click"/>
+                  
                 </hc:SimpleStackPanel>
                 <DataGrid Grid.Row="1" x:Name="DataPoints" />
             </Grid>
