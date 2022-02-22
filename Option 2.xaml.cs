@@ -1,5 +1,4 @@
-﻿using HandyControl.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -150,7 +149,7 @@ namespace PointsGeneratorFinder
         private async void FindS_Click(object sender, RoutedEventArgs e)
         {
             bool more_cols = false;
-            if(amount_cols >= amount_rows)
+            if (amount_cols >= amount_rows)
             {
                 more_cols = true;
             }
@@ -248,31 +247,58 @@ namespace PointsGeneratorFinder
             {
                 if (item.Count % 5 == 0 && item.Count > 5)
                 {
-                    //Take odd and even separetly
-                    //What if more than 10?
-                    //TODO: Mode to take odd and even
                     int p = item.Count / 5;
-                    for (int i = 0; i < p; i++)
+                    int p_odd = p % 2;
+
+                    for (int i = 0; i < p - p_odd; i += 2)
                     {
-                        List<Ellipse> el = item.GetRange(i * 5, 5);
-                        el.ForEach(x => x.Opacity = 0.2); //shorter than loop foreach with brackets
-                        await Task.Delay(500);
-                    }
-                }
-                else if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
-                {
-                    
-                    int p = item.Count / 5;
-                    for (int i = 0; i < p; i++)
-                    {
-                        List<Ellipse> el = item.GetRange(i * 5, 5);
-                        foreach (var ellipse in el)
+                        if (p_odd == 1)
                         {
-                            ellipse.Opacity = 0.2;
+                            List<Ellipse> el_odd = item.Skip(i * 5).Take(5).ToList();
+                            el_odd.ForEach(x => x.Opacity = 0.2);
+                            await Task.Delay(500);
+                            i += 1;
                         }
+                        if(i >= p - p_odd) //if there is only 5 elements
+                        {
+                            break;
+                        }
+                        List<Ellipse> el = item.Skip(i * 5).Take(10).ToList();
+                        List<Ellipse> even = new List<Ellipse>();
+                        List<Ellipse> odd = new List<Ellipse>();
+                        for (int h = 0; h < el.Count; h++)
+                        {
+                            if (h % 2 == 0)
+                            {
+                                //even
+                                even.Add(el[h]);
+                            }
+                            else
+                            {
+                                odd.Add(el[h]);
+                                //odd
+                            }
+                        }
+                        even.ForEach(x => x.Opacity = 0.2); //shorter than loop foreach with brackets
+                        await Task.Delay(500);
+                        odd.ForEach(x => x.Opacity = 0.2); //shorter than loop foreach with brackets
                         await Task.Delay(500);
                     }
                 }
+                //else if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
+                //{
+
+                //    int p = item.Count / 5;
+                //    for (int i = 0; i < p; i++)
+                //    {
+                //        List<Ellipse> el = item.GetRange(i * 5, 5);
+                //        foreach (var ellipse in el)
+                //        {
+                //            ellipse.Opacity = 0.2;
+                //        }
+                //        await Task.Delay(500);
+                //    }
+                //}
                 else if (item.Count < 5) //if there is less than 5 we can take all directly
                 {
                     item.ForEach(x => x.Opacity = 0.2);
@@ -299,10 +325,27 @@ namespace PointsGeneratorFinder
             {
                 Leftovers(leftovers);
             }
-           
+
+            //TEST AND INFO IF ALL IS GOOD
+            #region test
+            bool ok = true;
+            foreach (var item in area.Children) //take out only ellipses from canva
+            {
+                if (item is Ellipse)
+                {
+                    Ellipse el = item as Ellipse;
+                    if(el.Opacity != 0.2)
+                    {
+                        ok = false;
+                    }
+                }
+            }
+            info.Content = ok ? "It's good" : "Something missing";
+            #endregion
         }
         private async void start_Click(object sender, RoutedEventArgs e)
         {
+            info.Content = "";
             await take_out(all_ellipses);
         }
         /// <summary>
@@ -319,7 +362,7 @@ namespace PointsGeneratorFinder
         async void Leftovers(int amount)
         {
             //init new list that will contains what left from matrix
-            List<List<Ellipse>> subellipses = new List<List<Ellipse>>(); 
+            List<List<Ellipse>> subellipses = new List<List<Ellipse>>();
             foreach (var item in all_ellipses) //loop throught points
             {
                 List<Ellipse> tmp = new List<Ellipse>();

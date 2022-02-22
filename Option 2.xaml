@@ -62,7 +62,8 @@
                 </Grid.RowDefinitions>
                 <hc:SimpleStackPanel >
                     <Button Margin="2" x:Name="start" Style="{DynamicResource ButtonSuccess}" HorizontalAlignment="Stretch" Content="Start" Click="start_Click"/>
-                  
+                    <Label Margin="2" x:Name="info" Style="{DynamicResource LabelInfo}" HorizontalAlignment="Stretch" Content="" />
+
                 </hc:SimpleStackPanel>
                 <DataGrid Grid.Row="1" x:Name="DataPoints" />
             </Grid>
