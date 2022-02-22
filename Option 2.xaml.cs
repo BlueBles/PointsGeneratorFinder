@@ -285,20 +285,7 @@ namespace PointsGeneratorFinder
                         await Task.Delay(500);
                     }
                 }
-                //else if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
-                //{
-
-                //    int p = item.Count / 5;
-                //    for (int i = 0; i < p; i++)
-                //    {
-                //        List<Ellipse> el = item.GetRange(i * 5, 5);
-                //        foreach (var ellipse in el)
-                //        {
-                //            ellipse.Opacity = 0.2;
-                //        }
-                //        await Task.Delay(500);
-                //    }
-                //}
+        
                 else if (item.Count < 5) //if there is less than 5 we can take all directly
                 {
                     item.ForEach(x => x.Opacity = 0.2);
