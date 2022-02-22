@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HandyControl.Controls;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Window = System.Windows.Window;
 
 namespace PointsGeneratorFinder
 {
@@ -139,15 +141,27 @@ namespace PointsGeneratorFinder
             }
         }
 
+        /// <summary>
+        /// Find the best rows and columns and sort them.
+        /// </summary>
+        /// <remarks>
+        /// We have to know the exact amount of rows and columns to make sorting of points correctly
+        /// </remarks>
         private async void FindS_Click(object sender, RoutedEventArgs e)
         {
+            bool more_cols = false;
+            if(amount_cols >= amount_rows)
+            {
+                more_cols = true;
+            }
+            //clear at begin to make sure we looking in list of points
             if (all_ellipses.Count != 0)
             {
                 all_ellipses.Clear();
             }
-            //SORT by Y means columns, X is rows
+            //SORT by Y means columns, X is rows, for square matrix it goes columns
             List<Ellipse> ellipses = new List<Ellipse>(); //list for ellipses
-            if (amount_cols >= amount_rows)
+            if (more_cols)
             {
                 points = points.OrderBy(p => p.Y).ToList(); //sort points to match later sort of ellipse
             }
@@ -155,18 +169,18 @@ namespace PointsGeneratorFinder
             {
                 points = points.OrderBy(p => p.X).ToList(); //sort points to match later sort of ellipse
             }
-            DataPoints.ItemsSource = points;
-            foreach (var item in area.Children) //take out ellipses from canva
+            DataPoints.ItemsSource = points; //show points to confirm positions
+            foreach (var item in area.Children) //take out only ellipses from canva
             {
                 if (item is Ellipse)
                 {
                     ellipses.Add(item as Ellipse);
                 }
             }
-            if (amount_cols >= amount_rows)
+            if (more_cols)
             {
-                ellipses = ellipses.OrderBy(p => ((Point)p.Tag).Y).ToList(); //sort ellipses by points
-                int f = 0;
+                ellipses = ellipses.OrderBy(p => ((Point)p.Tag).Y).ToList(); //sort ellipses by points Y
+                int f = 0; //variable that track that there is good amount of points in one row/col
                 List<Ellipse> tmp = new List<Ellipse>();
                 foreach (var item in ellipses)
                 {
@@ -182,8 +196,8 @@ namespace PointsGeneratorFinder
             }
             else
             {
-                ellipses = ellipses.OrderBy(p => ((Point)p.Tag).X).ToList(); //sort ellipses by points
-                int f = 0;
+                ellipses = ellipses.OrderBy(p => ((Point)p.Tag).X).ToList(); //sort ellipses by points X
+                int f = 0; //variable that track that there is good amount of points in one row/col
                 List<Ellipse> tmp = new List<Ellipse>();
                 foreach (var item in ellipses)
                 {
@@ -197,10 +211,9 @@ namespace PointsGeneratorFinder
                     }
                 }
             }
-
+            #region VISUALISATION
             Brush brush = Brushes.Red;
             bool change = false;
-            int g = 0;
             //color just to see diffrence
             foreach (var item in all_ellipses)
             {
@@ -223,87 +236,109 @@ namespace PointsGeneratorFinder
                 }
                 await Task.Delay(50);
             }
+            #endregion
 
         }
 
-        private async Task take_out(List<List<Ellipse>> ellipses, bool recursive = false)
+        private async Task take_out(List<List<Ellipse>> ellipses)
         {
             int leftovers = 0;
-            if (recursive)
-            {
-                leftovers = ellipses[0].Count % 5;
-            }
-            else
-            {
-                foreach (var item in ellipses) //get row or column (bigger one)
-                {
 
-                    if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
+            foreach (var item in ellipses) //get one row or column (bigger one)
+            {
+                if (item.Count % 5 == 0 && item.Count > 5)
+                {
+                    //Take odd and even separetly
+                    //What if more than 10?
+                    //TODO: Mode to take odd and even
+                    int p = item.Count / 5;
+                    for (int i = 0; i < p; i++)
                     {
-                        //TODO: Mode to take odd and even
-                        int p = item.Count / 5;
-                        for (int i = 0; i < p; i++)
-                        {
-                            List<Ellipse> el = item.GetRange(i * 5, 5);
-                            foreach (var ellipse in el)
-                            {
-                                ellipse.Opacity = 0.2;
-                            }
-                            await Task.Delay(500);
-                        }
+                        List<Ellipse> el = item.GetRange(i * 5, 5);
+                        el.ForEach(x => x.Opacity = 0.2); //shorter than loop foreach with brackets
+                        await Task.Delay(500);
                     }
-                    else if (item.Count < 5) //if there is less than 5 we can take all directly
+                }
+                else if (item.Count % 5 == 0) //if it's multiplication of 5 then we can take 5,5,5
+                {
+                    
+                    int p = item.Count / 5;
+                    for (int i = 0; i < p; i++)
                     {
-                        foreach (var el in item)
+                        List<Ellipse> el = item.GetRange(i * 5, 5);
+                        foreach (var ellipse in el)
                         {
-                            Ellipse ellipse = el;
                             ellipse.Opacity = 0.2;
                         }
+                        await Task.Delay(500);
                     }
-                    else //there is more than 5, ex. 12,7,9,34
-                    {
-                        leftovers = item.Count % 5; //rest
-                        int p = item.Count / 5; //full 5
-                        for (int i = 0; i < p; i++)
-                        {
-                            List<Ellipse> el = item.GetRange(i * 5, 5);
-                            foreach (var ellipse in el)
-                            {
-                                ellipse.Opacity = 0.2;
-                            }
-                            await Task.Delay(500);
-                        }
-                    }
-                    await Task.Delay(500);
-
-
                 }
+                else if (item.Count < 5) //if there is less than 5 we can take all directly
+                {
+                    item.ForEach(x => x.Opacity = 0.2);
+                }
+                else //there is more than 5, ex. 12,7,9,34
+                {
+                    leftovers = item.Count % 5; //rest
+                    int p = item.Count / 5; //full 5
+                    for (int i = 0; i < p; i++)
+                    {
+                        List<Ellipse> el = item.GetRange(i * 5, 5);
+                        foreach (var ellipse in el)
+                        {
+                            ellipse.Opacity = 0.2;
+                        }
+                        await Task.Delay(500);
+                    }
+                }
+                await Task.Delay(500);
+
             }
+
             if (leftovers != 0)
             {
                 Leftovers(leftovers);
             }
+           
         }
         private async void start_Click(object sender, RoutedEventArgs e)
         {
             await take_out(all_ellipses);
         }
+        /// <summary>
+        /// Take points that left in matrix <c>subellipses</c>
+        /// </summary>
+        /// <example>
+        /// We got 7%5 it gaves us 2, so in this function we are taking 2 last col/rows and then we transpose cols->rows or rows->cols
+        /// </example>
+        /// <remarks>
+        /// After the iteration if the number rows or cols was not a multiplicity of 5.
+        /// We take off from all cols/rows the amount that left, and then we do a matrix transpose
+        /// </remarks>
+        /// <param name="amount">Quantity of not touched points in cols/rows</param>
         async void Leftovers(int amount)
         {
-            List<List<Ellipse>> subellipses = new List<List<Ellipse>>();
-            foreach (var item in all_ellipses)
+            //init new list that will contains what left from matrix
+            List<List<Ellipse>> subellipses = new List<List<Ellipse>>(); 
+            foreach (var item in all_ellipses) //loop throught points
             {
                 List<Ellipse> tmp = new List<Ellipse>();
                 for (int i = item.Count - 1; i >= 0; i--)
                 {
+                    //Take only values that we need, from the end of list (skip doesn't change order)
                     tmp = item.Skip(Math.Max(0, item.Count() - amount)).ToList();
                 }
+                //create new 
                 subellipses.Add(tmp);
             }
+            //We have to transpose the matrix to find optimal moves
+            //Optimal -> as much as possible (5 in one time is max)
             subellipses = subellipses.SelectMany(inner => inner.Select((item, index) => new { item, index })) //transpose of matrix
                                                                 .GroupBy(i => i.index, i => i.item)
                                                                 .Select(g => g.ToList())
                                                                 .ToList();
+            //TODO:uncomment under
+            //all_ellipses = subellipses; //this makes that it works in third recursion where there is on two(col/row) less than 5 elements
             await take_out(subellipses);
         }
 
