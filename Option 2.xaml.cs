@@ -18,7 +18,7 @@ namespace PointsGeneratorFinder
         List<List<Ellipse>> all_ellipses = new List<List<Ellipse>>();
         List<Point> points = new List<Point>();
         Canvas area;
-        const int SUCKERS = 5;
+        const int SUCKERS = 4;
         int amount_rows = 0;
         int amount_cols = 0;
         public Option_2()
@@ -30,14 +30,14 @@ namespace PointsGeneratorFinder
         async void drawPoints(int x, int y)
         {
             #region generate points
-            area.Height = y * 30;
-            area.Width = x * 30;
+            area.Height = y * 65; //rows
+            area.Width = x * 55; //columns
             Random random = new Random();
-            for (int i = 0; i < x; i++)
+            for (int i = 0; i < x; i++) //i columns
             {
-                for (int j = 0; j < y; j++)
+                for (int j = 0; j < y; j++) //j rows
                 {
-                    points.Add(new Point(i * 30 + 10, j * 30 + 10));
+                    points.Add(new Point(i * 55  , j * 65 )); //columns , rows
                 }
 
             }
@@ -245,25 +245,25 @@ namespace PointsGeneratorFinder
 
             foreach (var item in ellipses) //get one row or column (bigger one)
             {
-                if (item.Count % 5 == 0 && item.Count > 5)
+                if (item.Count % SUCKERS == 0 && item.Count > SUCKERS)
                 {
-                    int p = item.Count / 5;
+                    int p = item.Count / SUCKERS;
                     int p_odd = p % 2;
 
                     for (int i = 0; i < p - p_odd; i += 2)
                     {
-                        if (p_odd == 1)
+                        if (p_odd == 1) 
                         {
-                            List<Ellipse> el_odd = item.Skip(i * 5).Take(5).ToList();
+                            List<Ellipse> el_odd = item.Skip(i * SUCKERS).Take(SUCKERS).ToList();
                             el_odd.ForEach(x => x.Opacity = 0.2);
                             await Task.Delay(500);
                             i += 1;
                         }
-                        if(i >= p - p_odd) //if there is only 5 elements
+                        if(i >= p - p_odd) //if there is only elements in amount of suckers
                         {
                             break;
                         }
-                        List<Ellipse> el = item.Skip(i * 5).Take(10).ToList();
+                        List<Ellipse> el = item.Skip(i * SUCKERS).Take(SUCKERS*2).ToList();
                         List<Ellipse> even = new List<Ellipse>();
                         List<Ellipse> odd = new List<Ellipse>();
                         for (int h = 0; h < el.Count; h++)
@@ -286,17 +286,17 @@ namespace PointsGeneratorFinder
                     }
                 }
         
-                else if (item.Count < 5) //if there is less than 5 we can take all directly
+                else if (item.Count < SUCKERS) //if there is less than amount suckers we can take all directly
                 {
                     item.ForEach(x => x.Opacity = 0.2);
                 }
-                else //there is more than 5, ex. 12,7,9,34
+                else //there is more than suckers amount, ex. 12,7,9,34
                 {
-                    leftovers = item.Count % 5; //rest
-                    int p = item.Count / 5; //full 5
+                    leftovers = item.Count % SUCKERS; //rest
+                    int p = item.Count / SUCKERS; //full grip (p = what we can take at once)
                     for (int i = 0; i < p; i++)
                     {
-                        List<Ellipse> el = item.GetRange(i * 5, 5);
+                        List<Ellipse> el = item.GetRange(i * SUCKERS, SUCKERS);
                         foreach (var ellipse in el)
                         {
                             ellipse.Opacity = 0.2;
@@ -362,13 +362,13 @@ namespace PointsGeneratorFinder
                 subellipses.Add(tmp);
             }
             //We have to transpose the matrix to find optimal moves
-            //Optimal -> as much as possible (5 in one time is max)
+            //Optimal -> as much as possible 
             subellipses = subellipses.SelectMany(inner => inner.Select((item, index) => new { item, index })) //transpose of matrix
                                                                 .GroupBy(i => i.index, i => i.item)
                                                                 .Select(g => g.ToList())
                                                                 .ToList();
             //TODO:uncomment under
-            //all_ellipses = subellipses; //this makes that it works in third recursion where there is on two(col/row) less than 5 elements
+            all_ellipses = subellipses; //this makes that it works in third recursion where there is on two(col/row) less than 5 elements
             await take_out(subellipses);
         }
 
